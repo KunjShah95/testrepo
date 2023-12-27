@@ -1,0 +1,38 @@
+#app id: 1189076860374614036
+# public key: a12352b7244ef6e890957da47c618c8021dc6e5a54277a046e28e3756f6b3a84
+import discor#d
+import os
+from openai import OpenAI
+
+openai_client = OpenAI()
+openai_client.api_key = os.environ["OPENAI_API_KEY"]
+
+token = os.getenv("SECRET_KEY")
+
+class MyClient(discord.Client):
+  async def on_ready(self):
+      print(f'Logged on as {self.user}!')
+
+  async def on_message(self, message):
+      print(f'Message from {message.author}: {message.content}')
+      print(message.mentions)
+      if self.user != message.author:
+        if self.user in message.mentions:
+          channel = message.channel
+          response = openai_client.chat.completions.create(
+          model="gpt-3.5-turbo-instruct-0914",
+          prompt=message.content,
+          temperature=1,
+          max_tokens=256,
+          top_p=1,
+          frequency_penalty=0,
+          presence_penalty=0
+          )
+            messageToSend = response.choices[0].text
+            await channel.send(messageToSend)
+    
+intents = discord.Intents.default()
+intents.message_content = True
+
+client = MyClient(intents=intents)
+client.run(token)
